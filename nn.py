@@ -44,23 +44,25 @@ class Neural_Network(object):
         self.W1 += X.T.dot(self.z2_delta * self.eta)  # adjusting first set (input --> hidden) weights
         self.W2 += self.z2.T.dot(self.o_delta * self.eta)  # adjusting second set (hidden --> output) weights
 
-    def train(self, train_X, train_y, valx, valy, epochs=50):
-        train_errs = []
-        val_errs = []
+    def train(self, train_X, train_y, validation_x, validation_y, epochs=50):
+        train_errors = []
+        validation_errors = []
         for e in range(epochs):
             print(e)
 
             o = self.forward(train_X)
-            train_errs.append(self.err(o, train_y))
-            val_errs.append(self.err(self.forward(valx), valy))
+            train_errors.append(self.err(o, train_y))
 
             self.backward(train_X, train_y, o)
+            validation_errors.append(self.err(self.forward(validation_x), validation_y))
 
-        return train_errs, val_errs
+        return train_errors, validation_errors
 
     def err(self, o, exp):
-        diff = np.argmax(o) - np.argmax(exp)
-        return np.sum(diff != 0) / diff.size
+        diff = np.argmax(o, axis=1) - np.argmax(exp, axis=1)
+        a = np.sum(diff != 0)
+        print(diff, a, diff.size)
+        return a / diff.size
 
 
 def one_hot(data):
@@ -81,13 +83,14 @@ f.close()
 train_size = 10000
 val_size = 3000
 
-tr_x, tr_y = training_data[0][:train_size], one_hot(training_data[1][:train_size])
-val_x, val_y = training_data[0][train_size:train_size + val_size], one_hot(
-    training_data[1][train_size:train_size + val_size])
+training_x = training_data[0][:train_size]
+training_y = one_hot(training_data[1][:train_size])
+validation_x = training_data[0][train_size:train_size + val_size]
+validation_y = one_hot(training_data[1][train_size:train_size + val_size])
 
-train_errs, val_errs = NN.train(tr_x, tr_y, val_x, val_y)
+train_errors, validation_errors = NN.train(training_x, training_y, validation_x, validation_y)
 
-plt.plot(train_errs, label='train error')
-plt.plot(val_errs, label='valid error')
+plt.plot(train_errors, label='train error')
+plt.plot(validation_errors, label='valid error')
 
 plt.show()
